@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.hamcrest.collection.IsMapContaining.hasEntry;
@@ -72,7 +73,8 @@ class ApiControllerTests {
 		when(this.incidentRepository.findById(42L)).thenReturn(Optional.empty());
 		mvc.perform(get("/api/incidents/42"))
 				.andExpect(status().is(HttpStatus.NOT_FOUND.value()))
-				.andExpect(content().string(""));
+				.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+				.andExpect(jsonPath("$.status").value(404));
 	}
 
 	private Matcher<?> jsonIncidentMatcher(Incident incident) {
