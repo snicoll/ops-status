@@ -44,3 +44,9 @@ dependencies {
 tasks.named('test') {
 	useJUnitPlatform()
 }
+
+tasks.named("bootBuildImage") {
+	builder = "paketobuildpacks/builder-jammy-buildpackless-tiny"
+	buildpacks = [ "paketobuildpacks/java" ]
+	environment["BP_JVM_CDS_ENABLED"] = "true"
+}
