@@ -82,6 +82,16 @@ class ApiControllerTests {
 				.bodyJson().withResourceLoadClass(getClass()).isStrictlyEqualTo("missing-incident-42.json");
 	}
 
+	@Test
+	void incidentWithNoSuchIncidentErrorView() {
+		when(this.incidentRepository.findById(42L)).thenReturn(Optional.empty());
+		assertThat(mvc.perform(get("/api/incidents/42").accept(MediaType.TEXT_HTML)))
+				.hasStatus(HttpStatus.NOT_FOUND)
+				.hasContentTypeCompatibleWith(MediaType.TEXT_HTML)
+				.hasViewName("apierror")
+				.model().containsKey("exception");
+	}
+
 	private Consumer<Map<String, Object>> jsonIncident(Incident incident) {
 		return map -> assertThat(map).contains(entry("title", incident.getTitle()),
 				entry("description", incident.getDescription()),
