@@ -1,6 +1,7 @@
 plugins {
 	id 'java'
 	id 'org.springframework.boot' version '3.3.0'
+	id 'org.springframework.boot.aot' version '3.3.0'
 	id 'io.spring.dependency-management' version '1.1.5'
 	id 'io.spring.javaformat' version '0.0.41'
 }
@@ -49,8 +50,18 @@ tasks.named('test') {
 	useJUnitPlatform()
 }
 
+tasks.named('processTestAot') {
+	enabled = false
+}
+
+tasks.named('checkFormatAot') {
+	exclude '*'
+}
+
 tasks.named("bootBuildImage") {
 	builder = "paketobuildpacks/builder-jammy-buildpackless-tiny"
 	buildpacks = [ "paketobuildpacks/java" ]
 	environment["BP_JVM_CDS_ENABLED"] = "true"
+	environment["BP_SPRING_AOT_ENABLED"] = "true"
+	environment["CDS_TRAINING_JAVA_TOOL_OPTIONS"] = "-Dspring.flyway.enabled=false"
 }
