@@ -20,18 +20,17 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.assertj.MockMvcTester;
 
+import static java.util.Map.entry;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
 @WebMvcTest(controllers = DashboardController.class)
 class DashboardControllerTests {
 
 	@Autowired
-	private MockMvc mvc;
+	private MockMvcTester mvc;
 
 	@MockitoBean
 	private IncidentRepository incidentRepository;
@@ -40,7 +39,7 @@ class DashboardControllerTests {
 	private InfrastructureComponentRepository infrastructureComponentRepository;
 
 	@Test
-	void getPopulatesModel() throws Exception {
+	void getPopulatesModel() {
 		Incident inProgress = createTestIncident("Oops", "something failed", IncidentStatus.IN_PROGRESS);
 		when(incidentRepository.findAllByStatusOrderByHappenedOnDesc(IncidentStatus.IN_PROGRESS))
 			.thenReturn(List.of(inProgress));
@@ -52,12 +51,10 @@ class DashboardControllerTests {
 			.thenReturn(resolvedIncidents);
 		Set<InfrastructureComponent> infrastructureComponents = new DemoDataGenerator().infrastructureComponents(10);
 		when(infrastructureComponentRepository.findAll(Sort.by("name"))).thenReturn(infrastructureComponents);
-		mvc.perform(get("/"))
-			.andExpect(view().name("dashboard"))
-			.andExpect(model().attribute("inProgress", List.of(inProgress)))
-			.andExpect(model().attribute("scheduled", List.of()))
-			.andExpect(model().attribute("resolved", resolvedIncidents))
-			.andExpect(model().attribute("components", infrastructureComponents));
+		assertThat(mvc.get().uri("/")).hasViewName("dashboard")
+			.model()
+			.contains(entry("inProgress", List.of(inProgress)), entry("scheduled", List.of()),
+					entry("resolved", resolvedIncidents), entry("components", infrastructureComponents));
 	}
 
 	private Incident createTestIncident(String title, String description, IncidentStatus status) {
