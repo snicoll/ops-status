@@ -18,11 +18,12 @@ import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.json.JsonCompareMode;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.util.StreamUtils;
 
@@ -39,14 +40,16 @@ class ApiControllerTests {
 	@Autowired
 	private MockMvc mvc;
 
-	@MockBean
+	@MockitoBean
 	private IncidentRepository incidentRepository;
 
 	@Test
 	void incidentsWhenNoIncident() throws Exception {
 		when(this.incidentRepository.streamAll()).thenReturn(Stream.empty());
-		mvc.perform(get("/api/incidents")).andExpect(status().isOk())
-				.andExpect(jsonPath("incidents").isArray()).andExpect(jsonPath("incidents").isEmpty());
+		mvc.perform(get("/api/incidents"))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("incidents").isArray())
+			.andExpect(jsonPath("incidents").isEmpty());
 	}
 
 	@Test
@@ -78,9 +81,10 @@ class ApiControllerTests {
 	void incidentWithNoSuchIncident() throws Exception {
 		when(this.incidentRepository.findById(42L)).thenReturn(Optional.empty());
 		mvc.perform(get("/api/incidents/42").accept(MediaType.APPLICATION_PROBLEM_JSON))
-				.andExpect(status().is(HttpStatus.NOT_FOUND.value()))
-				.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
-				.andExpect(content().json(readJson(new ClassPathResource("missing-incident-42.json", getClass())),true));
+			.andExpect(status().is(HttpStatus.NOT_FOUND.value()))
+			.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+			.andExpect(content().json(readJson(new ClassPathResource("missing-incident-42.json", getClass())),
+					JsonCompareMode.STRICT));
 	}
 
 	private Matcher<?> jsonIncidentMatcher(Incident incident) {
